@@ -9,10 +9,12 @@ struct node {
 
 Node* ll_create_node(int value) {
     Node* node = (Node*) malloc(sizeof(Node));
-    if (node) {
-        node->value = value;
-        node->next = NULL;
+    if (!node) {
+        return NULL;
     }
+
+    node->value = value;
+    node->next = node;
 
     return node;
 }
@@ -23,8 +25,10 @@ int ll_is_empty(const Node* lhead) {
 
 int ll_size(Node* lhead) {
     int counter = 0;
+    Node* first = lhead;
 
-    while (lhead != NULL) {
+    // Cycle through the list
+    while (lhead->next != first) {
         counter += 1;
         lhead = lhead->next;
     }
@@ -34,13 +38,24 @@ int ll_size(Node* lhead) {
 
 int ll_insert_first(Node** lhead, int value) {
     Node* newNode = ll_create_node(value);
-    if (newNode) {
-        newNode->next = *lhead;
-        *lhead = newNode;
-        return 1;
+    if (!newNode) {
+        return 0;
     }
 
-    return 0;
+    newNode->next = *lhead;
+
+    // Go to the end of the list
+    Node* first = *lhead;
+    while ((*lhead)->next != first) {
+        *lhead = (*lhead)->next;
+    }
+
+    // Make last item point to the new one
+    (*lhead)->next = newNode;
+    // Set the list's beginning to the new node
+    *lhead = newNode;
+
+    return 1;
 }
 
 int ll_insert_last(Node** lhead, int value) {
@@ -49,17 +64,22 @@ int ll_insert_last(Node** lhead, int value) {
     }
 
     Node* newNode = ll_create_node(value);
-    if (newNode) {
-        Node* temp = *lhead;
-        while (temp->next != NULL) {
-            temp = temp->next;
-        }
-
-        temp->next = newNode;
-        return 1;
+    if (!newNode) {
+        return 0;
     }
 
-    return 0;
+    // Go to the end of the list
+    Node* temp = *lhead;
+    while (temp->next != *lhead) {
+        temp = temp->next;
+    }
+
+    // Place new node at the end of the list
+    temp->next = newNode;
+    // Point new node back to the beginning of the list
+    newNode->next = *lhead;
+
+    return 1;
 }
 
 int ll_exists(Node* lhead, int value) {
@@ -67,12 +87,14 @@ int ll_exists(Node* lhead, int value) {
         return 0;
     }
 
-    while (lhead != NULL) {
+    // Cycle through the list
+    Node* first = lhead;
+    while (lhead != first) {
         if (lhead->value == value) {
             return 1;
-
-            lhead = lhead->next;
         }
+
+        lhead = lhead->next;
     }
 
     return 0;
@@ -81,8 +103,10 @@ int ll_exists(Node* lhead, int value) {
 void ll_print(Node* lhead, char* message) {
     printf("%s ", message);
 
-    while (lhead != NULL) {
+    Node* first = lhead;
+    while (lhead != first) {
         printf("%d ", lhead->value);
+
         lhead = lhead->next;
     }
 
@@ -90,11 +114,13 @@ void ll_print(Node* lhead, char* message) {
 }
 
 void ll_clear(Node** lhead) {
+    Node* first = *lhead;
     Node* next = NULL;
     Node* temp = *lhead;
 
-    while (temp != NULL) {
+    while (temp != first) {
         next = temp->next;
+
         free(temp);
         temp = next;
     }
@@ -103,13 +129,14 @@ void ll_clear(Node** lhead) {
 }
 
 int ll_remove(Node** lhead, int value) {
+    Node* first = *lhead;
     Node* last = NULL;
     Node* temp = *lhead;
     int found = 0;
 
-    // Cycle through the entire list
-    while (temp != NULL) {
-        // Stop if given "value" was found
+    // Cycle through the list
+    while (temp != first) {
+        // Stop if given value was found
         if (temp->value == value) {
             found = 1;
             break;
@@ -120,7 +147,7 @@ int ll_remove(Node** lhead, int value) {
     }
 
     if (found) {
-        // If "value" was in the first element
+        // If value was in the first element
         if (last == NULL) {
             // Shift the beginning of the list and remove it
             *lhead = temp->next;
@@ -151,7 +178,7 @@ int ll_insert_sorted(Node** lhead, int value) {
         Node* last = NULL;
         Node* temp = *lhead;
 
-        // Cycle through list until you find a >= value
+        // Cycle through the list until you find a >= value
         while (temp != NULL && temp->value < value) {
             last = temp;
             temp = temp->next;
@@ -164,7 +191,7 @@ int ll_insert_sorted(Node** lhead, int value) {
             return 1;
         }
 
-        // Otherwise, insert newly created node between "last" and "next"
+        // Otherwise, insert new node between "last" and "next"
         newNode->next = last->next;
         last->next = newNode;
         return 1;
